@@ -25,7 +25,7 @@ Run this command, making sure to replace <PATH_TO_CREDENTIAL_FILE> with the corr
 ```
 kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=<PATH_TO_CREDENTIAL_FILE>
 ```
-Change `[INSTANCE_CONNECTION_NAME]i`  to include your GCP
+Change `[INSTANCE_CONNECTION_NAME]` in `manifests/mysql-proxy.yaml`  to include your GCP
 project, the region of your Cloud SQL instance and the name
 of your Cloud SQL instance. The format is
 ` -instances=$PROJECT:$REGION:INSTANCE=tcp:0.0.0.0:3306`
