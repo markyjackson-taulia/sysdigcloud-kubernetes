@@ -17,6 +17,18 @@ To create a MySQL deployment, the provided manifest under `manifests/mysql.yaml`
 ```
 kubectl create -f manifests/mysql.yaml --namespace sysdigcloud
 ```
+## Google Cloud SQL with CloudSQL proxy
+
+You'll need to create several Secret resources to allow the SQL proxy to connect with your SQL instance. First, you'll need to create a secret resource containing the Service Account credentials to allow the proxy to communicate with the Cloud SQL API.
+
+Run this command, making sure to replace <PATH_TO_CREDENTIAL_FILE> with the correct location of the JSON file of your service account:
+```
+kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=<PATH_TO_CREDENTIAL_FILE>
+```
+Then, run:
+
+kubectl create -f manifests/mysql-proxy.yaml 
+
 
 ## Redis
 
