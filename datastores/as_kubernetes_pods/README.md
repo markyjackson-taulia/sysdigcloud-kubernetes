@@ -22,8 +22,10 @@ kubectl create -f manifests/mysql.yaml --namespace sysdigcloud
 You'll need to create several Secret resources to allow the SQL proxy to connect with your SQL instance. First, you'll need to create a secret resource containing the Service Account credentials to allow the proxy to communicate with the Cloud SQL API.
 
 You would need to enable CloudSQL API in two places
+```
 1) Via the API Manager and enabling the "Cloud SQL API”
 2) When creating the Container Cluster and under project access and enabling "Cloud SQL"
+```
 
 Run this command, making sure to replace <PATH_TO_CREDENTIAL_FILE> with the correct location of the JSON file of your service account:
 ```
