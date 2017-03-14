@@ -93,3 +93,59 @@ UN  10.52.1.7  917.91 KB  256     31.9%             9a7437e9-890f-477a-99be-3d80
 It is important for the number of deployments to be increased by no more than 1 at every scaling activity, since Cassandra will refuse the joining of a new node in the Cluster if one joining process is already in progress. 
 
 Maintaining a multi-node production Cassandra cluster requires some simple but mandatory housekeeping procedures, best described in the official documentation.
+
+## Elasticsearch
+
+Before deploying the deployment object, the proper Elasticsearch headless service must be created (the headless service will be used for service discovery when deploying a multi-node Elasticsearch cluster):
+
+```
+kubectl create -f manifests/elasticsearch-service.yaml --namespace sysdigcloud
+```
+To create an Elasticsearch deployment, the provided manifest under `manifests/elasticsearch-deployment.yaml` can be used. By default, it will use a local non-persistent volume (emptyDir), but the manifest contains commented snippets that can be uncommented when using persistent volumes such as AWS EBS or GCE Disks (just replace the volume id from the cloud provider in the snippet):
+
+```
+kubectl create -f manifests/elasticsearch-deployment.yaml --namespace sysdigcloud
+```
+This creates an Elasticsearch cluster of size 1. To expand the Elasticseatch cluster, a new deployment must be created for each additional Elasticsearch node in the cluster. You can't just scale the replicas of the existing deployment because each Elasticsearch pod must get a different persistent volume, so in that sense Elasticsearch pods are "pets" with unique identities and not "cattles".
+
+In order for the new Elasticsearch deployment to automatically join the cluster, some conventions must be followed. In particular, the Elasticsearch node number (1, 2, 3, ...) must be properly put in the manifest `manifests/elasticsearch-deployment.yaml` under the entries marked as `# Elasticsearch node number`.
+
+For example, to scale the Elasticsearch cluster from 2 to 3 nodes, the manifest can be edited as such:
+
+```
+...
+metadata:
+  name: sysdigcloud-elasticsearch-3 # Elasticsearch node number
+...
+      labels:
+        instance: "3" # Elasticsearch node number
+...
+```
+
+And then the deployment can be created as usual:
+
+```
+kubectl create -f manifests/elasticsearch-deployment.yaml --namespace sysdigcloud
+```
+After each scaling activity, the status of the cluster can be checked by executing `curl -sS http://127.0.0.1:9200/_cluster/health?pretty=true` in one of the Elasticsearch pods.
+
+```
+$ kubectl --namespace sysdigcloud exec -it sysdigcloud-elasticsearch-1-2660816362-tfht5 -- curl -sS http://127.0.0.1:9200/_cluster/health?pretty=true
+{
+  "cluster_name" : "sysdigcloud",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 2,
+  "number_of_data_nodes" : 2,
+  "active_primary_shards" : 0,
+  "active_shards" : 0,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 100.0
+}
+```

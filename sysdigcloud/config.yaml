@@ -24,6 +24,13 @@ data:
   # Required: Redis endpoint DNS/IP. If Redis is deployed as a Kubernetes service, 
   # this will be the service name. If using an external database, put the proper address
   redis.endpoint: sysdigcloud-redis
+  # Required: Elasticsearch URL. If Elasticsearch is deployed as a Kubernetes service,
+  # this will be the service name. If using an external database, put the proper address
+  elasticsearch.url: http://sysdigcloud-elasticsearch
+  # Optional: Elasticsearch JVM options, when Elasticsearch is started as a Kubernetes service using
+  # the provided manifests. For heavy load environments you'll need to tweak the memory or garbage
+  # collection settings
+  elasticsearch.jvm.options: ""
   # Optional: SMTP server address, needed for Sysdig Cloud to send email notifications
   smtp.server: ""
   # Optional: SMTP server port

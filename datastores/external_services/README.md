@@ -6,6 +6,7 @@ It is possible to use one or more external datastore services that are not manag
 mysql.endpoint: <DNS/IP>
 cassandra.endpoint: <DNS/IP>
 redis.endpoint: <DNS/IP>
+elasticsearch.url: <DNS/IP>
 ```
 
 #### MySQL notes:

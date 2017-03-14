@@ -21,6 +21,12 @@ spec:
               value: "2"
             - name: CASSANDRA_CLUSTER_NAME
               value: sysdigcloud
+            # If not using CASSANDRA_SERVICE discovery, manually configure the seeds
+            # - name: CASSANDRA_SEEDS
+            #   value: ""
+            # If using multiple directories for data, set the path list
+            # - name: CASSANDRA_DATA_DIRS
+            #   value: "/var/lib/cassandra/data /var/lib/cassandra/data2"
             - name: JVM_EXTRA_OPTS
               valueFrom:
                 configMapKeyRef:
@@ -29,12 +35,24 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/cassandra
               name: data
+            # Uncomment this when using multiple mount points for data
+            # - mountPath: /var/lib/cassandra/data2
+            #   name: data2
       imagePullSecrets:
         - name: sysdigcloud-pull-secret
       volumes:
         # Uncomment this for emptyDir volumes
         - name: data
           emptyDir: {}
+        # - name: data2
+        #   emptyDir: {}
+        # Uncomment this for hostPath volumes
+        # - name: data
+        #   hostPath:
+        #     path: /mnt/data
+        # - name: data2
+        #   hostPath:
+        #     path: /mnt/data2
         # Uncomment this for GCE Disk
         # - name: data
         #   gcePersistentDisk:
