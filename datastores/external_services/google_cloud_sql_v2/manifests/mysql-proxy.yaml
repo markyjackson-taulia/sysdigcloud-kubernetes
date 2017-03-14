@@ -28,7 +28,6 @@ spec:
         # project, the region of your Cloud SQL instance and the name
         # of your Cloud SQL instance. The format is
         # -instances=$PROJECT:$REGION:INSTANCE=tcp:0.0.0.0:3306
-        # [START proxy_container]
         - image: b.gcr.io/cloudsql-docker/gce-proxy:1.05
           name: mysqlproxy
           command: ["/cloud_sql_proxy", "--dir=/cloudsql",
@@ -40,8 +39,6 @@ spec:
               readOnly: true
             - name: ssl-certs
               mountPath: /etc/ssl/certs
-        # [END proxy_container]
-      # [START volumes]
       volumes:
         - name: cloudsql-oauth-credentials
           secret:
@@ -49,5 +46,3 @@ spec:
         - name: ssl-certs
           hostPath:
             path: /etc/ssl/certs
-      # [END volumes]
-
