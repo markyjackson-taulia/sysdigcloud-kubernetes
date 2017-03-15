@@ -11,7 +11,4 @@ elasticsearch.url: <DNS/IP>
 
 #### MySQL notes:
 MySQL service requires a pre-existing schema named `draios` and character-set and collation configured to UTF-8
-`CREATE SCHEMA draios DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_unicode_ci;
-`
-
 If you plan to use Google Cloud SQL second generation please see this [link](google_cloud_sql_v2)
