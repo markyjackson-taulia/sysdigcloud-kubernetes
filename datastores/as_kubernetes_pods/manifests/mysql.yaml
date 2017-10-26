@@ -68,18 +68,18 @@ spec:
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
-                configMapKeyRef:
-                  name: sysdigcloud-config
+                secretKeyRef:
+                  name: sysdigcloud-secret
                   key: mysql.password
             - name: MYSQL_USER
               valueFrom:
-                configMapKeyRef:
-                  name: sysdigcloud-config
+                secretKeyRef:
+                  name: sysdigcloud-secret
                   key: mysql.user
             - name: MYSQL_PASSWORD
               valueFrom:
-                configMapKeyRef:
-                  name: sysdigcloud-config
+                secretKeyRef:
+                  name: sysdigcloud-secret
                   key: mysql.password
             - name: MYSQL_DATABASE
               value: draios

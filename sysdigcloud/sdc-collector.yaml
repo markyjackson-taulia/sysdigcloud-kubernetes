@@ -23,9 +23,8 @@ spec:
             # Uncomment this if you need to import self-signed SSL certs
             #- name: java-certs
             #  mountPath: /opt/java-certs/
-            # Uncomment this if you want to split sysdgicloud configurations into configs and secrets.
-            #- name: secrets
-            #  mountPath: /opt/kubernets_secrets
+            - name: secrets
+              mountPath: /opt/kubernets_secrets
           env:
             - name: ROLES
               value: collector
@@ -65,7 +64,6 @@ spec:
         #- name: java-certs
         #  secret:
         #    secretName: sysdigcloud-java-certs
-        # Uncomment this if you want to split sysdgicloud configurations into configs and secrets.
-        #- name: secrets
-        #  secret:
-        #    secretName: <secret_name>
+        - name: secrets
+          secret:
+            secretName: sysdigcloud-secret

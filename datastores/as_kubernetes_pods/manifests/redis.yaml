@@ -29,7 +29,7 @@ spec:
           env:
             - name: REDIS_PASSWORD
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: sysdigcloud-config
                   key: redis.password
       imagePullSecrets:
