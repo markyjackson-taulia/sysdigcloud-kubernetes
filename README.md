@@ -22,7 +22,7 @@ kubectl create namespace sysdigcloud
 
 ### Step 2: User settings
 
-##### ConfigMap
+#### ConfigMap
 
 The file `sysdigcloud/config.yaml` contains a ConfigMap with all the available user settings. After editing this file, the Kubernetes object can be created:
 
@@ -33,7 +33,7 @@ kubectl create -f sysdigcloud/config.yaml --namespace sysdigcloud
 Most settings can also be edited after the initial deployment, as they will be known just after the deployment of some Kubernetes services.
 
 
-##### Secret
+#### Secret
 
 The file `sysdigcloud/secret.yaml` contains the essential credentials that are used in the datastore as well as backend. The file must be edited with the proper settings, including the mandatory `sysdigcloud.license`. After editing this file, the Kubernetes object can be created:
 

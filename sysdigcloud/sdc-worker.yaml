@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: quay.io/sysdig/sysdigcloud-backend:693
+          image: quay.io/sysdig/sysdigcloud-backend:718
           volumeMounts:
             - name: logs
               mountPath: /var/log/sysdigcloud
