@@ -3,14 +3,10 @@ kind: ConfigMap
 metadata:
   name: sysdigcloud-config
 data:
-  # Required: MySQL endpoint DNS/IP. If MySQL is deployed as a Kubernetes service,
+  # Required: MySQL endpoint DNS/IP. If MySQL is deployed as a Kubernetes service, 
   # this will be the service name. If using an external database, put the proper address
   mysql.endpoint: sysdigcloud-mysql
-  # Moved to secrets
-  # mysql.user: admin
-  # Moved to secrets
-  # mysql.password: password
-  # Required: Cassandra endpoint DNS/IP. If Cassandra is deployed as a Kubernetes service,
+  # Required: Cassandra endpoint DNS/IP. If Cassandra is deployed as a Kubernetes service, 
   # this will be the service name. If using an external database, put the proper address
   # (the address of a single node will be sufficient)
   cassandra.endpoint: sysdigcloud-cassandra
@@ -22,10 +18,6 @@ data:
   # Optional: Specify Cassandra cipher suites to use. This option is available only when using external cassandra clusters.
   # Comma separated value. Example: "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA"
   cassandra.ssl.ciphers: ""
-  # Moved to secrets
-  # cassandra.user: ""
-  # Moved to secrets
-  # cassandra.password: ""
   # Required: CQL native clients port
   cassandra.port: "9042"
   # Optional: Cassandra replication factor to use. This parameter will just be applied during the
@@ -35,11 +27,9 @@ data:
   # the provided manifests. For heavy load environments you'll need to tweak the memory or garbage
   # collection settings
   cassandra.jvm.options: ""
-  # Required: Redis endpoint DNS/IP. If Redis is deployed as a Kubernetes service,
+  # Required: Redis endpoint DNS/IP. If Redis is deployed as a Kubernetes service, 
   # this will be the service name. If using an external database, put the proper address
   redis.endpoint: sysdigcloud-redis
-  # Moved to secrets
-  # redis.password: ""
   # Required: Elasticsearch URL. If Elasticsearch is deployed as a Kubernetes service,
   # this will be the service name. If using an external database, put the proper address
   elasticsearch.url: http://sysdigcloud-elasticsearch
@@ -53,8 +43,6 @@ data:
   smtp.server.port: "25"
   # Optional: SMTP user (leave empty if your server doesn't require authentication)
   smtp.user: ""
-  # Optional: SMTP password (leave empty if your server doesn't require authentication)
-  smtp.password: ""
   # Optional: SMTP Secure Connection options
   smtp.tls: "false"
   smtp.ssl: "false"
@@ -71,37 +59,27 @@ data:
   collector.port: "6443"
   # Required: Api service https URL. If the api needs to be reachable outside the Kubernetes
   # cluster, this will likely need to be set to the address of the Kubernetes nodes and the dynamic port allocated
-  # by Kubernetes (if using a NodePort service) or the cloud load balancer created by the service (if using a LoadBalancer service).
+  # by Kubernetes (if using a NodePort service) or the cloud load balancer created by the service (if using a LoadBalancer service). 
   # Otherwise, it can be left to the default value and the api will just be routable within the Kubernetes cluster.
   api.url: https://sysdigcloud-api:443
-  # Moved to secrets
-  # sysdigcloud.default.user: test@sysdig.com
-  # Moved to secrets
-  # ysdigcloud.default.user.password: test
+  # Required: Restrict password login to default user
+  # Force all non-default users to login using the configured IdP
+  sysdigcloud.restrict.password.login: "false"
   # Optional: forward application logs to stdout
   sysdigcloud.logging.stdout: "false"
-  # Optional: Sysdig Cloud application JVM options. For heavy load environments you'll need to tweak
+  # Optional: Sysdig Cloud application JVM options. For heavy load environments you'll need to tweak 
   # the memory or garbage collection settings
   sysdigcloud.jvm.options: ""
-  # Moved to secrets
-  # sysdigcloud.license: ""
+  # Required: Sysdig Cloud license
+  sysdigcloud.license: ""
   # Optional: OAuth allowed domains (comma separated list of domains)
   sysdigcloud.oauth.allowed.domains.list: ""
-  # Optional: Sysdig Cloud Google OAuth Client ID
-  # Moved to secret.yaml
-  # sysdigcloud.google.oauth.client.id: ""
-  # Optional: Sysdig Cloud Google OAuth Client Secret
-  # Moved to secret.yaml
-  # sysdigcloud.google.oauth.client.secret: ""
   # Required: enable or disable Sysdig Cloud LDAP integration
   sysdigcloud.ldap.enabled: "false"
   # Optional: LDAP server endpoint (eg: ldaps://1.2.3.4:636)
   sysdigcloud.ldap.endpoint: ""
   # Optional: LDAP DN manager (eg: cn=servicer_acccount,ou=Service accounts,dc=demo,dc=com)
   sysdigcloud.ldap.manager.dn: ""
-  # Optional: LDAP Manager password
-  # Moved to secret.yaml
-  # sysdigcloud.ldap.manager.password: ""
   # Optional: LDAP root DN
   sysdigcloud.ldap.root.dn: ""
   # Optional: LDAP user search base
