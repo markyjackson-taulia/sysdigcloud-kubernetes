@@ -88,9 +88,11 @@ data:
   # Optional: OAuth allowed domains (comma separated list of domains)
   sysdigcloud.oauth.allowed.domains.list: ""
   # Optional: Sysdig Cloud Google OAuth Client ID
-  sysdigcloud.google.oauth.client.id: ""
+  # Moved to secret.yaml
+  # sysdigcloud.google.oauth.client.id: ""
   # Optional: Sysdig Cloud Google OAuth Client Secret
-  sysdigcloud.google.oauth.client.secret: ""
+  # Moved to secret.yaml
+  # sysdigcloud.google.oauth.client.secret: ""
   # Required: enable or disable Sysdig Cloud LDAP integration
   sysdigcloud.ldap.enabled: "false"
   # Optional: LDAP server endpoint (eg: ldaps://1.2.3.4:636)
@@ -98,7 +100,8 @@ data:
   # Optional: LDAP DN manager (eg: cn=servicer_acccount,ou=Service accounts,dc=demo,dc=com)
   sysdigcloud.ldap.manager.dn: ""
   # Optional: LDAP Manager password
-  sysdigcloud.ldap.manager.password: ""
+  # Moved to secret.yaml
+  # sysdigcloud.ldap.manager.password: ""
   # Optional: LDAP root DN
   sysdigcloud.ldap.root.dn: ""
   # Optional: LDAP user search base

@@ -30,7 +30,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: sysdigcloud-config
+                  name: sysdigcloud-secret
                   key: redis.password
       imagePullSecrets:
         - name: sysdigcloud-pull-secret
