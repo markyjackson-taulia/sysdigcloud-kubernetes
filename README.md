@@ -38,8 +38,23 @@ Create the pull secret object using kubectl:
 ```
 kubectl create -f sysdigcloud/pull-secret.yaml --namespace sysdigcloud
 ```
+### Step 4: (Optional) AWS credentials
 
-### Step 4: SSL certificates
+AWS credentials must be set as environment variables if you want to publish to AWS SNS notification channel.
+
+Prerequisite:
+* AWS user created (Create access key needed for publishing (ACCESS_KEY_ID, SECRET_KEY))
+* SNS topic created
+* allow user to publish to SNS (SNS dashboard->Topics->Select topic->Other topic actions->Edit topic policy->Only these AWS users... insert user ARN, e.g. arn:aws:iam::123123123:user/Test-User)
+* Create the secret objects using kubectl:
+
+```
+kubectl create secret generic aws-key-id --from-literal=AWS_ACCESS_KEY_ID=ACCESS_KEY_ID --namespace=sysdigcloud
+kubectl create secret generic aws-key-secret --from-literal=AWS_SECRET_ACCESS_KEY=SECRET_KEY --namespace=sysdigcloud
+```
+This step can be done also after starting up the whole environment. Just make sure that the worker pods pick up the new secrets.
+
+### Step 5: SSL certificates
 
 Sysdig Cloud api and collector services use SSL to secure the communication between the customer browser and sysdigcloud agents.
 
@@ -64,14 +79,14 @@ For each certificate you want to import create a file, for example: certs1.crt, 
 kubectl create secret generic sysdigcloud-java-certs --from-file=certs1.crt --from-file=certs2.crt --namespace=sysdigcloud
 ```
 
-### Step 5: Datastore deployment
+### Step 6: Datastore deployment
 
 Sysdig Cloud requires MySQL, Cassandra, Redis and Elasticsearch to properly work. Deployment of stateful services in Kubernetes can be done in several ways. It is recommended to tweak the deployment of those depending on the individual needs. Some examples (mostly meant as guidelines) are:
 
 - [Kubernetes pods](datastores/as_kubernetes_pods): datastores deployed within Kubernetes, with optional data persistency
 - [External services](datastores/external_services): more flexible method, giving full control to the user about the location and deployment types of the databases
 
-### Step 6: Expose Sysdig Cloud services
+### Step 7: Expose Sysdig Cloud services
 
 To expose the Sysdig Cloud api and collector deployments you can create a Kubernetes NodePort or LoadBalacer service, depending on the specific needs.
 
@@ -96,7 +111,7 @@ It is possible to create a LoadBalancer Service for Sysdig Cloud api and collect
 kubectl create -f sysdigcloud/api-loadbalancer-service.yaml -f sysdigcloud/collector-loadbalancer-service.yaml --namespace sysdigcloud
 ```
 
-### Step 7: Deploy Sysdig Cloud components
+### Step 8: Deploy Sysdig Cloud components
 
 The Sysdig Cloud tiers can be created with the proper manifests:
 
@@ -106,7 +121,7 @@ kubectl create -f sysdigcloud/sdc-api.yaml -f sysdigcloud/sdc-collector.yaml -f 
 
 This command will create three deployments named `sysdigcloud-api`, `sysdigcloud-collector`, `sysdigcloud-worker`
 
-### Step 8: Connect to Sysdig Cloud
+### Step 9: Connect to Sysdig Cloud
 
 After all the components have been deployed and the pods are all in a ready state, it should be possible to continue the installation by opening the browser on the port exposed by the `sysdigcloud-api` service (the specific port depends on the chosen service type), for example `https://sysdigcloud-api:443`
 
