@@ -37,20 +37,6 @@ data:
     symbolic-links=0
     !includedir /etc/mysql/conf.d/
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: sysdigcloud-mysql
-  labels:
-    app: sysdigcloud
-    role: mysql
-spec:
-  ports:
-    - port: 3306
-  selector:
-    app: sysdigcloud
-    role: mysql
----
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
