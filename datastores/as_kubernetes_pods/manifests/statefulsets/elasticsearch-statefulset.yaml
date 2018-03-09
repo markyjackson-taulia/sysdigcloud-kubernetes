@@ -59,7 +59,7 @@ spec:
       # Uncomment this for AWS Disk
       #storageClassName: sysdigcloud-cassandra-sc-aws
       # Uncomment this for GCE Disk
-      storageClassName: sysdigcloud-cassandra-sc-gce
+      #storageClassName: sysdigcloud-cassandra-sc-gce
       resources:
         requests:
           # We reccomend 1G of disk space for each connected agent
