@@ -1,0 +1,9 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: sysdigcloud-cassandra-sc-gce
+provisioner: kubernetes.io/gce-pd
+reclaimPolicy: Retain
+parameters:
+  #accepted values: pd-standard, pd-ssd more info here: https://kubernetes.io/docs/concepts/storage/storage-classes/#gce
+  type: pd-standard

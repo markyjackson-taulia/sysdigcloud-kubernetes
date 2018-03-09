@@ -1,0 +1,9 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: sysdigcloud-sassandra-sc-aws
+provisioner: kubernetes.io/aws-ebs
+reclaimPolicy: Retain
+parameters:
+  #accepted values: io1, gp2, sc1, st1 more info here: https://kubernetes.io/docs/concepts/storage/storage-classes/#aws
+  type: gp2

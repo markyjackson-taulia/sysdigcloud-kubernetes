@@ -1,16 +1,27 @@
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta2
+kind: StatefulSet
 metadata:
-  name: sysdigcloud-elasticsearch-1 # Elasticsearch node number
+  name: sysdigcloud-elasticsearch
+  labels:
+    app: sysdigcloud
+    role: elasticsearch
 spec:
+  serviceName: sysdigcloud-elasticsearch
+  podManagementPolicy: "OrderedReady"
+  updateStrategy:
+    type: RollingUpdate
   replicas: 1
+  selector:
+    matchLabels:
+      app: sysdigcloud
+      role: elasticsearch
   template:
     metadata:
       labels:
-        instance: "1" # Elasticsearch node number
         app: sysdigcloud
         role: elasticsearch
     spec:
+      terminationGracePeriodSeconds: 120
       containers:
         - name: elasticsearch
           image: quay.io/sysdig/elasticsearch:5.1.1.0
@@ -36,21 +47,20 @@ spec:
                   name: sysdigcloud-config
                   key: elasticsearch.jvm.options
           volumeMounts:
-            - mountPath: /usr/share/elasticsearch/data
-              name: data
+            - name: data
+              mountPath: /usr/share/elasticsearch/data
       imagePullSecrets:
         - name: sysdigcloud-pull-secret
-      volumes:
-        # Uncomment this for emptyDir volumes
-        - name: data
-          emptyDir: {}
-        # Uncomment this for GCE Disk
-        # - name: data
-        #   gcePersistentDisk:
-        #     pdName: <volume-name>
-        #     fsType: ext4
-        # Uncomment this for AWS EBS
-        # - name: data
-        #   awsElasticBlockStore:
-        #     volumeID: <volume-id>
-        #     fsType: ext4
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      # Uncomment this for AWS Disk
+      #storageClassName: sysdigcloud-cassandra-sc-aws
+      # Uncomment this for GCE Disk
+      storageClassName: sysdigcloud-cassandra-sc-gce
+      resources:
+        requests:
+          # We reccomend 1G of disk space for each connected agent
+          storage: 100Gi

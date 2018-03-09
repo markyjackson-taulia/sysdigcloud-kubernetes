@@ -23,9 +23,8 @@ spec:
     spec:
       terminationGracePeriodSeconds: 120
       containers:
-        - image: quay.io/sysdig/cassandra:2.1.15.1
-          imagePullPolicy: Always
-          name: cassandra
+        - name: cassandra
+          image: quay.io/sysdig/cassandra:2.1.15.1
           env:
             - name: CASSANDRA_SERVICE
               value: sysdigcloud-cassandra
@@ -55,8 +54,8 @@ spec:
                   name: sysdigcloud-config
                   key: cassandra.ssl.enabled
           volumeMounts:
-            - mountPath: /var/lib/cassandra
-              name: data
+            - name: data
+              mountPath: /var/lib/cassandra
             # Uncomment this when using multiple mount points for data
             # - mountPath: /var/lib/cassandra/data2
             #   name: data2
@@ -77,15 +76,16 @@ spec:
             timeoutSeconds: 5
       imagePullSecrets:
         - name: sysdigcloud-pull-secret
-  # These are converted to volume claims by the controller
-  # and mounted at the paths mentioned above.
-  # do not use these in production until ssd GCEPersistentDisk or other ssd pd
   volumeClaimTemplates:
   - metadata:
       name: data
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      # Uncomment this for AWS Disk
+      #storageClassName: sysdigcloud-cassandra-sc-aws
+      # Uncomment this for GCE Disk
       storageClassName: sysdigcloud-cassandra-sc-gce
       resources:
         requests:
-          storage: 10Gi
+          # We reccomend 1G of disk space for each connected agent
+          storage: 100Gi
