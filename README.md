@@ -85,8 +85,31 @@ Datastores (redis, mysql, elasticsearch and cassandra) are stateful. They are co
 1. Clone this repository to your machine
 	`git clone https://github.com/yofti/sdc-kubernetes`
 2. Put your sysdig license and quay key in `etc/licenses/`. Name the files `license.uri` and `quay.uri` respectively.
-3. `cd aws` or `cd gke` depending on your cloud provider.
-4. Run ./install.sh
+3. Edit the file `./etc/config/sdc-settings.yaml`:
+
+- change the following line - **THIS IS VERY IMPORTANT TO AVOID AFFECTING EXISTING NAMESPACES**
+
+```
+sysdigNamespace: <put your namespace here and make sure it's unique>
+```
+	
+- add your Sysdig license and `quay.io` secret:
+
+```
+values:
+	configmapName: sysdigcloud-config
+	sysdigPullSecret: <value here>
+	sysdigcloudLicense: <value here>
+	elasticsearchUrl: http://sdc-elasticsearch
+```
+
+- edit any other value that you want to change
+
+4. run the script `bin/create-manifests.sh`
+
+5. make sure the target `yaml` files are set correctly
+
+6. Run `bin/install.sh`
 
 
 ## Confirm Installation  <a id="Confirm-Installation"></a>
