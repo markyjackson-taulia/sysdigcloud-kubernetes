@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: redis-secondary-statefulset
+spec:
+  serviceName: redis-secondary-svc
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: redis-secondary-statefulset
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: redis-secondary-statefulset
+        image: quay.io/sysdig/redis:3.2-v2
+        imagePullPolicy: Always
+        env:
+        - name: REPLICA
+          value: "true"
+        ports:
+        - containerPort: 6379
+          name: redis-secondary
+        volumeMounts:
+        - name: redis-secondary-volume
+          mountPath: /data
+  volumeClaimTemplates:
+            - metadata:
+                name: data
+              spec:
+                accessModes: ["ReadWriteOnce"]
+                resources:
+                  requests:
+                    storage: 5Gi
+                storageClassName: standard

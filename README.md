@@ -1,359 +1,194 @@
-# sdc-kubernetes: Sysdig Cloud Monitor Backend on Kubernetes
+# Sysdig Cloud on Kubernetes
 
+## Installation Guide
 
-## Table of Contents
-  * [What is this?](#What-is-this?)
-  * [Infrastructure Overview](#Infrastructure-Overview)
-  * [Requirements](#Requirements)
-  * [Installation Guide](#Installation-Guide)
-  * [Confirm Installation](#Confirm-Installation)
-  * [What does the installer do?](#What-does-the-installer-do?)
-  * [Operations Guide](#Operations-Guide)
-      - [Stop and Start](#Stop-and-Start)
-      - [Scale up and down](#scale-up-and-down)
-      - [Modifying configMap](#Modifying-configMap)
-      - [Version updates](#Version-updates)
-      - [Uninstall](#Uninstall)
-  * [Tips and Tricks](#Tips-and-Tricks)
+### Requirements
 
-
-## What is this? <a id="What-is-this?"></a>
-
-SDC-Kubernetes is an on-prem version of [Sysdig Monitor](https://sysdig.com/product/monitor/), a SAAS offering by Sysdig 
-Inc for monitoring containerized and non-containerized environments. 
-The official on-prem Kubernetes guide can be found [here](https://github.com/draios/sysdigcloud-kubernetes). 
-
-Here are the most recent updates:
-
-- **Introduction of Statefulsets**
-    
-    **NOTE**: Kubernetes statefulsets are stable (GA) in version 1.9. Using an earlier version may have adverse affects.
-
-- **Introduction of persistence to datastores**
-
-    Persistent volumes can utilize block disks from the various cloud provider dynamically. The disks can be encrypted, 
-    adjusted for IOPS specific performance and can utilize snapshots for backups.
-    
-- **Elimination of single points of failure**
-
-    All datastore components are now highly-available running in statefulsets with replicas >= 3. Cassandra and 
-    Elasticsearch comprise of active/active cluster rings. MySQL and Redis are configured master/slave replications.
-    In general, when a new Pod joins the set as a slave, it must assume the MySQL master might already have data on it. 
-    It also must assume that the replication logs might not go all the way back to the beginning of time. These 
-    conservative assumptions are the key to allow a running StatefulSet to scale up and down over time, rather than 
-    being fixed at its initial size.
-    The second Init Container, named clone-mysql, performs a clone operation on a slave Pod the first time it starts 
-    up on an empty PersistentVolume. That means it copies all existing data from another running Pod, so its local state 
-    is consistent enough to begin replicating from the master.
-    MySQL itself does not provide a mechanism to do this, so the example uses a popular open-source tool called Percona 
-    XtraBackup. During the clone, the source MySQL server might suffer reduced performance. To minimize impact on the 
-    MySQL master, the script instructs each Pod to clone from the Pod whose ordinal index is one lower. This works 
-    because the StatefulSet controller always ensures Pod N is Ready before starting Pod N+1. Please note that it is 
-    advised to allow 2X the disk size for MySQL.
-
-
-- **Templatize Deployment**
-
-  SDC-settings.yaml contains configurable parameters.
-  Templates in $SDC_HOME/etc/config/templates will be populated by variables contained in the sdc-settings file and 
-  manifests are created
-  
-## Infrastructure Overview <a id="Infrastructure-Overview"></a>
-
-![sdc-kubernetes](https://user-images.githubusercontent.com/12384605/32736470-653dabb8-c84c-11e7-89bb-71c201ec980f.png?raw=true)
-
-###### Backend Components
-* api-servers: Provides a web and API interface to the sysdig application
-* collectors: Agents connect to the backend via sysdig collectors
-* workers: Process data aggregations and alerts
-
-###### Cache Layer
-* redis: intra-service cache
-
-###### DataStores
-* mysql: stores user data and environmental data
-* elasticsearch: stores event and metadata
-* cassandra: stores sysdig metrics
-
-Backend components (worker, api and collector) are stateless deployed in deploymentsets.
-Datastores (redis, mysql, elasticsearch and cassandra) are stateful. They are configured in statefulsets that use 
-Persistent Volume Claims (PVC) from the cloud provider.
-
-## Requirements <a id="Requirements"></a>
-
-- Access to a running Kubernetes cluster on AWS or GKE.
+- Running Kubernetes cluster, Kubernetes version >= 1.9.X (this guide has been tested with Kubernetes 1.10)
 - Sysdig Cloud quay.io pull secret
 - Sysdig Cloud license
-- kubectl installed on your machine and communicating with the Kubernetes cluster
-- [kontemplate] (https://github.com/tazjin/kontemplate) is required for templatize deployment.
 
-## Installation Guide <a id="Installation-Guide"></a>
+### Infrastructure Overview
 
-1. Clone the repository
-    `git clone https://github.com/draios/sysdigcloud-kubernetes.git`
-2. Edit the file `etc/config/sdc-settings.yaml`. This file contains the editable parameter.
-3. Next is to run `/bin/create-manfiests.sh`. This wiull build the Kubernetes manifests.
-4. Finally, run `/bin/install.sh` to install and run the application.  
+![Sysdig Cloud infrastructure](images/sysdig_cloud_infrastructure.png?raw=true "Infrastructure")
 
+### Step 1: Namespace creation
 
-## Confirm Installation  <a id="Confirm-Installation"></a>
-
-Once the installation has been completed, your output should look similar (please note that the below output is an example):
-    
-    $ kubectl get pods -n sysdigcloud    
-    sdc-api-2039094698-11rtd         1/1       Running   0          13m
-    sdc-cassandra-0                  1/1       Running   0          12m
-    sdc-cassandra-1                  1/1       Running   0          11m
-    sdc-cassandra-2                  1/1       Running   0          11m
-    sdc-collector-1001165270-chrz0   1/1       Running   0          13m
-    sdc-elasticsearch-0              1/1       Running   0          14m
-    sdc-elasticsearch-1              1/1       Running   0          14m
-    sdc-elasticsearch-2              1/1       Running   0          14m
-    sdc-mysql-0                      2/2       Running   0          14m
-    sdc-mysql-slave-0                2/2       Running   1          14m
-    sdc-mysql-slave-1                2/2       Running   0          14m
-    sdc-redis-0                      1/1       Running   0          14m
-    sdc-redis-slave-0                1/1       Running   0          14m
-    sdc-redis-slave-1                1/1       Running   0          14m
-    sdc-worker-1937471472-hfp25      1/1       Running   0          13m
-
-    $ kubectl -n sysdigcloud get services
-    NAME                CLUSTER-IP   EXTERNAL-IP        PORT(S)                               AGE
-    sdc-api             10.3.0.36    ad0d03112c706...   443:32253/TCP                         32m
-    sdc-cassandra       None         <none>             9042/TCP,7000/TCP,7001/TCP,7199/TCP   34m
-    sdc-collector       10.3.0.203   ad0e5cf87c706...   6443:31063/TCP                        32m
-    sdc-elasticsearch   None         <none>             9200/TCP,9300/TCP                     34m
-    sdc-mysql           None         <none>             3306/TCP                              34m
-    sdc-mysql-slave     None         <none>             3306/TCP                              33m
-    sdc-redis           None         <none>             6379/TCP,16379/TCP                    34m
-    sdc-redis-slave     None         <none>             6379/TCP,16379/TCP                    34m
-
-Describe the sdc-api service to get the full API endpoint URL.
-It will be `ad0d03112c70611e79d6006e5a830746-1802392156.us-west-1.elb.amazonaws.com` in this case. Use this URL to 
-access the SDC Monitor interface. This URL can be given a sensible URL via Route53 or similar.
-(please note that the below output is an example)
-
-    $ kubectl -n sysdigcloud describe service sdc-api
-    Name:            sdc-api
-    Namespace:       sysdigcloud
-    Labels:          app=sysdigcloud
-                     role=api
-    Annotations:     <none>
-    Selector:        app=sysdigcloud,role=api
-    Type:            LoadBalancer
-    IP:              10.3.0.36
-    LoadBalancer Ingress:    ad0d03112c70611e79d6006e5a830746-1802392156.us-west-1.elb.amazonaws.com
-    Port:            secure-api    443/TCP
-    NodePort:        secure-api    32253/TCP
-    Endpoints:        10.2.79.173:443
-    Session Affinity:    None
-    Events:
-      FirstSeen    LastSeen    Count    From            SubObjectPath    Type        Reason            Message
-      ---------    --------    -----    ----            -------------    --------    ------            -------
-      33m        33m        1    service-controller            Normal        CreatingLoadBalancer    Creating load balancer
-      33m        33m        1    service-controller            Normal        CreatedLoadBalancer     Created load balancer
-
-
-Describe the sdc-collector service to see the full collector endpoint URL. It will be `ad0e5cf87c70611e79d6006e5a830746-257288196.us-west-1.elb.amazonaws.com`
-(please note that the below output is an example)
-
-    $ kubectl -n sysdigcloud describe service sdc-collector
-    Name:            sdc-collector
-    Namespace:       sysdigcloud
-    Labels:          app=sysdigcloud
-                     role=collector
-    Annotations:     <none>
-    Selector:        app=sysdigcloud,role=collector
-    Type:            LoadBalancer
-    IP:              10.3.0.203
-    LoadBalancer Ingress:    ad0e5cf87c70611e79d6006e5a830746-257288196.us-west-1.elb.amazonaws.com
-    Port:            secure-collector    6443/TCP
-    NodePort:        secure-collector    31063/TCP
-    Endpoints:        10.2.23.211:6443
-    Session Affinity:    None
-    Events:
-      FirstSeen    LastSeen    Count    From            SubObjectPath    Type        Reason            Message
-      ---------    --------    -----    ----            -------------    --------    ------            -------
-      34m        34m        1    service-controller            Normal        CreatingLoadBalancer    Creating load balancer
-      33m        33m        1    service-controller            Normal        CreatedLoadBalancer     Created load balancer
-
-
-In the above example, go to `https://ad0d03112c70611e79d6006e5a830746-1802392156.us-west-1.elb.amazonaws.com:<port#>` to 
-access the main Monitor GUI.
-Point your collectors to `ad0e5cf87c70611e79d6006e5a830746-257288196.us-west-1.elb.amazonaws.com`.
-
-
-
-## What does the installer do? <a id="What-does-the-installer-do?"></a>
-
-1. It creates a namespace called *sysdigcloud* where all components are deployed.
-
-    `kubectl create namespace sysdigcloud`
-
-2. It creates Kubernetes secrets and configMaps populated with information about usernames, passwords, ssl certs, 
-quay.io pull secret and various application specific parameters.
-
-    `kubectl create -f etc/sdc-config.yaml`
-
-3. Create Kubernetes StorageClasses identifying the types of disks to be provided to our datastores.
-
-    `kubectl create -R -f datastores/storageclasses/`
-
-4. Creates the datastore statefulsets (redis, mysql, elasticsearch and cassandra). Elasticsearch and Cassandra are 
-automatically setup with --replica=3 generating full clusters. Redis and mysql are configured with master/slave replication. 
-
-    `kubectl create -R -f datastores/`
-
-5. Deploys the backend Deployment sets (worker, collect and api)
-
-    `kubectl create -R -f backend/`
-
-## Operations Guide <a id="Operations-Guide"></a>
-
-#### Stop and Start <a id="Stop-and-Start"></a>
-
-You can stop the whole application by running `uninstall.sh`. It will save the namespace, storageclasses and PVC's. 
-You can then start the application with `install.sh`. Script will complain about pre-existing elements, but the application 
-will still be started. PVC's are preserved which means all data on redis, mysql, elasticsearch and cassandra are persisted. 
-If you want to start with application with clean PVC's, either uninstall the application as described in the "Uninstall section" or delete PVC's manually after shutting down applications. 
-
-You can also stop and start individual components:
-
-###### Shutdown all backend components using the definition yaml files
-```
-$ pwd
-~/sdc-kubernetes/aws
-
-$ kubectl -n sysdigcloud -R -f backend/
-service "sdc-api" deleted
-deployment "sdc-api" deleted
-service "sdc-collector" deleted
-deployment "sdc-collector" deleted
-deployment "sdc-worker" deleted
-```
-
-###### Shutdown Cassandra using the yaml file
-```
-$ kubectl -n sysdigcloud delete -f datastore/sdc-cassandra.yaml
-service "sdc-cassandra" deleted
-statefulset "sdc-cassandra" deleted
-```
-
-###### Shutdown Elasticsearch and associated service
-```
-$ kubectl -n sysdigcloud get statefulsets 
-NAME                DESIRED   CURRENT   AGE
-sdc-elasticsearch   3         3         2d
-sdc-mysql           1         1         2d
-sdc-mysql-slave     3         3         2d
-sdc-redis           1         1         2d
-sdc-redis-slave     2         2         2d
-
-$ kubectl -n sysdigcloud delete statefulset sdc-elasticsearch
-statefulset "sdc-elasticsearch" deleted
-
-$ kubectl -n sysdigcloud get services
-NAME                CLUSTER-IP   EXTERNAL-IP   PORT(S)              AGE
-sdc-elasticsearch   None         <none>        9200/TCP,9300/TCP    2d
-sdc-mysql           None         <none>        3306/TCP             2d
-sdc-mysql-slave     None         <none>        3306/TCP             2d
-sdc-redis           None         <none>        6379/TCP,16379/TCP   2d
-sdc-redis-slave     None         <none>        6379/TCP,16379/TCP   2d
-
-$ kubectl -n sysdigcloud delete service sdc-elasticsearch
-service "sdc-elasticsearch" deleted
-```
-
-###### Start Components individually
-```
-$ pwd
-~/sdc-kubernetes/aws
-
-$ kubectl create -f etc/sdc-config.yaml
-$ kubectl create -f datastores/sdc-mysql-master.yaml 
-$ kubectl create -f datastores/sdc-mysql-slaves.yaml 
-$ kubectl create -f datastores/sdc-redis-master.yaml 
-$ kubectl create -f datastores/sdc-redis-slaves.yaml 
-$ kubectl create -f datastores/sdc-cassandra.yaml  
-$ kubectl create -f datastores/sdc-elasticsearch.yaml 
-$ kubectl create -f backend/sdc-api.yaml
-$ kubectl create -f backend/sdc-colector.yaml
-$ kubectl create -f backend/sdc-worker.yaml
+It is recommended to create a separate Kubernetes namespace for Sysdig Cloud. The installation manifests don't assume a specific one in order to give the user more flexibility. In the rest of this guide, the chosen namespace will be `sysdigcloud`:
 
 ```
-
-#### Scale up and down <a id="Scale-up-and-down"></a>
-
-You can scale up and down any sdc-kubernetes component. 
-
-For worker, collector and api which are deployed as Deployment sets, do:
-```
-$kubectl -n sysdigcloud scale --replicas=5 deployment sdc-api
-$kubectl -n sysdigcloud scale --replicas=5 deployment sdc-collector
-$kubectl -n sysdigcloud scale --replicas=5 deployment sdc-worker
-
-$ for i in sdc-api sdc-collector sdc-worker; do kubectl -n sysdigcloud --replicas=1 $i; done
+kubectl create namespace sysdigcloud
 ```
 
-For the datastores, redis, mysql, elasticsearch and cassandra, which are deployed as Statefulsets, do:
-```
-#scale up or down depending on existing number of copies
-$kubectl -n sysdigcloud scale --replicas=4 statefulset sdc-cassandra
-$kubectl -n sysdigcloud scale --replicas=4 statefulset sdc-elasticsearch
-$kubectl -n sysdigcloud scale --replicas=4 statefulset sdc-mysql-slave
-$kubectl -n sysdigcloud scale --replicas=4 statefulset sdc-redis-slave
-```
+### Step 2: User settings
 
-You can edit a particular configMap:
-`kubectl -n sysdigcloud edit configmap sysdigcloud-config`
-
-The preferred method would be to edit the file `etc/sdc-config.yaml` and replace the whole configMap set
-```
-vi etc/sdc-config.yaml
-kubectl -n sysdigcloud replace configmap -f etc/sdc-config.yaml
-```
-
-After updating the ConfigMap, the Sysdig Cloud components need to be restarted in order for the changed parameters to 
-take effect. This can be done by simply forcing a rolling update of the deployments. A possible way to do so is:
+The file `sysdigcloud/config.yaml` contains a ConfigMap with all the available user settings. The file must be edited with the proper settings, including the mandatory `sysdigcloud.license`. After editing, then the Kubernetes object can be created:
 
 ```
-kubectl patch deployment sdc-api -p "{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"`date +'%s'`\"}}}}}" -n sysdigcloud
-kubectl patch deployment sdc-collector -p "{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"`date +'%s'`\"}}}}}" -n sysdigcloud
-kubectl patch deployment sdc-worker -p "{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"`date +'%s'`\"}}}}}" -n sysdigcloud
+kubectl create -f sysdigcloud/config.yaml --namespace sysdigcloud
+``` 
+
+Most settings can also be edited after the initial deployment, as they will be known just after the deployment of some Kubernetes services.
+
+### Step 3: Quay pull secret
+
+To download Sysdig Cloud Docker images it is mandatory to create a Kubernetes pull secret. Edit the file `sysdigcloud/pull-secret.yaml` and change the place holder `<PULL_SECRET>` with the provided pull secret.
+Create the pull secret object using kubectl:
+
+```
+kubectl create -f sysdigcloud/pull-secret.yaml --namespace sysdigcloud
+```
+
+### Step 4: SSL certificates
+
+Sysdig Cloud api and collector services use SSL to secure the communication between the customer browser and sysdigcloud agents.
+
+If you want to use a custom SSL secrets, make sure to obtain the respective `server.crt` and `server.key` files, otherwise you can also create a self-signed certificate with:
+
+```
+openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj "/C=US/ST=CA/L=SanFrancisco/O=ICT/CN=onprem.sysdigcloud.com" -keyout server.key -out server.crt
+```
+
+Once done, create a Kubernetes secret:
+
+```
+kubectl create secret tls sysdigcloud-ssl-secret --cert=server.crt --key=server.key --namespace=sysdigcloud
+```
+
+##### Optional: Custom SSL certificates
+
+If you want to use services that implement SSL self-signed certificates you can import those certificates and their chains, storing them in PEM format and injecting them as a generic kubernets secret.
+For each certificate you want to import create a file, for example: certs1.crt, cert2.crt, ... and then the kubernetes secret using the following command line:
+
+```
+kubectl create secret generic sysdigcloud-java-certs --from-file=certs1.crt --from-file=certs2.crt --namespace=sysdigcloud
+```
+
+### Step 5: Datastore deployment
+
+Sysdig Cloud requires MySQL, Cassandra, Redis and Elasticsearch to properly work. Deployment of stateful services in Kubernetes can be done in several ways. It is recommended to tweak the deployment of those depending on the individual needs. Some examples (mostly meant as guidelines) are:
+
+- [Kubernetes pods](datastores/as_kubernetes_pods): datastores deployed within Kubernetes, with optional data persistency
+- [External services](datastores/external_services): more flexible method, giving full control to the user about the location and deployment types of the databases
+
+### Step 6: Expose Sysdig Cloud services
+
+To expose the Sysdig Cloud api and collector deployments you can create a Kubernetes NodePort or LoadBalacer service, depending on the specific needs.
+
+#### NodePort
+
+Using a NodePort service the Kubernetes master will allocate a port on each node and will proxy that port (the same port number on every Node) towards the service.
+After this step, it should be possible to correctly fill all the parameters in the ConfigMap, such as `collector.endpoint`, `collector.port` and `api.url`.
+
+It is possible to create a NodePort service for Sysdig Cloud api and collector using kubectl and the templates in the sysdigcloud directory:
+
+```
+kubectl create -f sysdigcloud/api-nodeport-service.yaml -f sysdigcloud/collector-nodeport-service.yaml --namespace sysdigcloud
+```
+
+#### LoadBalancer
+
+On cloud providers which support external load balancers, using a LoadBalancer service will provision a load balancer for the service. The actual creation of the load balancer happens asynchronously. Traffic from the external load balancer will be directed at the backend pods, though exactly how that works depends on the cloud provider.
+
+It is possible to create a LoadBalancer Service for Sysdig Cloud api and collector using kubectl and the templates in the sysdigcloud folder:
+
+```
+kubectl create -f sysdigcloud/api-loadbalancer-service.yaml -f sysdigcloud/collector-loadbalancer-service.yaml --namespace sysdigcloud
+```
+
+### Step 7: Deploy Sysdig Cloud components
+
+The Sysdig Cloud tiers can be created with the proper manifests:
+
+```
+kubectl create -f sysdigcloud/sdc-api.yaml -f sysdigcloud/sdc-collector.yaml -f sysdigcloud/sdc-worker.yaml --namespace sysdigcloud
+```
+
+This command will create three deployments named `sysdigcloud-api`, `sysdigcloud-collector`, `sysdigcloud-worker`
+
+### Step 8: Connect to Sysdig Cloud
+
+After all the components have been deployed and the pods are all in a ready state, it should be possible to continue the installation by opening the browser on the port exposed by the `sysdigcloud-api` service (the specific port depends on the chosen service type), for example `https://sysdigcloud-api:443`
+
+# Additional topics
+
+## Updates
+
+Sysdig Cloud releases are listed [here](https://github.com/draios/sysdigcloud-kubernetes/releases). Each release has a version number (e.g. 353) and specific upgrade notes.
+
+By default, the manifests use the image tag of the latest stable release. This way, scaling activities that occur at a later time will always work on a consistent version of the application. When a new version is released, the upgrade process will need to be run in order to move all the deployments to the newer release.
+
+For the majority of the updates, the format of the manifests does not change in new releases, and the update process is as simple as bumping the version of the Docker images. For example, to upgrade to version 353:
+
+```
+kubectl set image deployment/sysdigcloud-api api=quay.io/sysdig/sysdigcloud-backend:353 --namespace sysdigcloud
+kubectl set image deployment/sysdigcloud-collector collector=quay.io/sysdig/sysdigcloud-backend:353 --namespace sysdigcloud
+kubectl set image deployment/sysdigcloud-worker worker=quay.io/sysdig/sysdigcloud-backend:353 --namespace sysdigcloud
+```
+
+Assuming the deployments have more than one replica each, these commands will trigger rolling update process for each component. If you have configured container resource limits and you do not have spare resources in your cluster, before you update the image version, you should scale the replicas down by 1. For example, if you have 5 API component replicas running:
+
+```
+kubectl scale --replicas=4 deployment sysdigcloud-api --namespace sysdigcloud
+kubectl set image deployment/sysdigcloud-api api=quay.io/sysdig/sysdigcloud-backend:353 --namespace sysdigcloud
+kubectl scale --replicas=5 deployment sysdigcloud-api --namespace sysdigcloud
+```
+
+This will ensure the smooth upgrade process and will not cause any downtime.
+
+In some circumstances, the manifests will change with a new release (the typical case being new parameters added to the ConfigMap). In these cases, the upgrade notes will clearly indicate what resources need to be recreated (the user can also inspect the changes by comparing different releases within the GitHub interface). The user should then choose the best upgrade strategy that satisfies the business requirement. In the simplest case, the user would just replace the deployments (causing downtime). In a more elaborate scenario, the user would create a new deployment alongside the old one, and would decommission the old one when the new one comes up, minimizing the downtime (which might still happen in case of some complicated database schema migrations, which will clearly be listed in the upgrade notes).
+
+Although updating to the latest release is recommended, this repository is versioned, and a customer can feel free to pin a deployment to a particular release, and will always be able to fetch the specific manifests for the older version.
+
+## Scale components
+
+For performance and high availability reasons, it is possible to scale the Sysdig Cloud api, collector and worker by changing the number of replicas on the respective deployments:
+
+```
+kubectl --namespace sysdigcloud scale --replicas=2 deployment sysdigcloud-collector --namespace sysdigcloud
+kubectl --namespace sysdigcloud scale --replicas=2 deployment sysdigcloud-worker --namespace sysdigcloud
+kubectl --namespace sysdigcloud scale --replicas=2 deployment sysdigcloud-api --namespace sysdigcloud
+```
+
+It is also recommended to scale the Cassandra cluster (the specific procedure depends on the type of Cassandra deployment, follow the relevant guides for more information).
+
+## Configuration changes
+
+To change the original installation parameters, the ConfigMap can simply be edited:
+
+```
+kubectl edit configmap/sysdigcloud-config --namespace sysdigcloud
+```
+
+If the ConfigMap is edited on the client side (for example, to keep it synced in a git repository), it can be simply overridden with:
+
+```
+kubectl replace -f sysdigcloud/config.yaml --namespace sysdigcloud
+```
+
+After updating the ConfigMap, the Sysdig Cloud components need to be restarted in order for the changed parameters to take effect. This can be done by simply forcing a rolling update of the deployments. A possible way to do so is:
+
+```
+kubectl patch deployment sysdigcloud-api -p "{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"`date +'%s'`\"}}}}}" --namespace sysdigcloud
+kubectl patch deployment sysdigcloud-collector -p "{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"`date +'%s'`\"}}}}}" --namespace sysdigcloud
+kubectl patch deployment sysdigcloud-worker -p "{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"`date +'%s'`\"}}}}}" --namespace sysdigcloud
 ```
 
 This will ensure that the application restarts with no downtime (assuming the deployments have more than one replica each).
 
+## Troubleshooting data
 
-#### Version updates <a id="Version-updates"></a>
+When experiencing issues, you can collect troubleshooting data that can help the support team. The data can be collected by hand, or we provide a very simple `get_support_bundle.sh` script that takes as an argument the namespace where Sysdig Cloud is deployed and will generate a tarball containing some information (mostly log files):
 
-Sysdig Cloud releases are listed [here](https://github.com/draios/sysdigcloud-kubernetes/releases). Each release has a 
-version number (e.g. 893) and specific upgrade notes. If you look in the 3 backend files `backend/sdc-api.yaml`, `backend/sdc-collector.yaml` and `backend/sdc-worker.yaml`, you will see the following identical line in all of them under their container/image defintions:
 ```
-image: quay.io/sysdig/sysdigcloud-backend:658
-```
-In this case, we are running version 658 of the backend. 
-
-To upgrade to version 893 (the latest), there are two options:
-
-1. Edit the backend files' yaml definitions. Add the right tag for the image `sysdigcloud-backend` like:
-```
-image: quay.io/sysdig/sysdigcloud-backend:658
-```
-and restart the app.
-
-2. You can do a rolling update if downtimes are sensitive.
-```
-kubectl set image deployment/sdc-api api=quay.io/sysdig/sysdigcloud-backend:893 -n sysdigcloud
-kubectl set image deployment/sdc-collector collector=quay.io/sysdig/sysdigcloud-backend:893 -n sysdigcloud
-kubectl set image deployment/sdc-worker worker=quay.io/sysdig/sysdigcloud-backend:893 -n sysdigcloud
-```
-
-#### Uninstall <a id="Uninstall"></a>
-
-To completely remove the sdc-kubernetes application, run the following commands
-```
-uninstall.sh
-```
-This will shutdown all components and by destorying the namespace, it will destroy the PVC's.
-  
+$ ./scripts/get_support_bundle.sh sysdigcloud
+Getting support logs for sysdigcloud-api-1477528018-4od59
+Getting support logs for sysdigcloud-api-1477528018-ach89
+Getting support logs for sysdigcloud-cassandra-2987866586-fgcm8
+Getting support logs for sysdigcloud-collector-2526360198-e58uy
+Getting support logs for sysdigcloud-collector-2526360198-v1egg
+Getting support logs for sysdigcloud-mysql-2388886613-a8a12
+Getting support logs for sysdigcloud-redis-1701952711-ezg8q
+Getting support logs for sysdigcloud-worker-1086626503-4cio9
+Getting support logs for sysdigcloud-worker-1086626503-sdtrc
+Support bundle generated: 1473897425_sysdig_cloud_support_bundle.tgz
