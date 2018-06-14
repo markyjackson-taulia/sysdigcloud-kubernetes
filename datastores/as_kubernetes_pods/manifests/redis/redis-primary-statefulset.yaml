@@ -1,0 +1,33 @@
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: redis-pri-sts
+spec:
+  serviceName: redis-primary-svc
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-pri
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: redis-pri-sts
+        image: quay.io/sysdig/redis:3.2-v2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6379
+          name: redis-pri-sts
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+          - metadata:
+              name: data
+            spec:
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 5Gi
+              storageClassName: standard
