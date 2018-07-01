@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,12 +11,11 @@ data:
   mysql.user: admin
   # Required: MySQL password
   mysql.password: password
-  # Required: Cassandra endpoint DNS/IP. If Cassandra is deployed as a Kubernetes service, 
-  # this will be the service name. If using an external database, put the proper address
-  # (the address of a single node will be sufficient)
+  # Required: Cassandra endpoint DNS/IP. If Cassandra is deployed as a Kubernetes service, this will be the service name.
+  # If using an external database, put the proper address (the address of a single node will be sufficient)
   cassandra.endpoint: sysdigcloud-cassandra
   # Optional: enable or disable cassandra authentication and authorization in sysdigcloud cassandra image,
-  # if you want to enable it, make sure to follow the support guide in the official sysdigcloud documentation
+  # if you want to enable it, make sure to follow the support guide in the official sysdigcloud documentation (needs link)
   cassandra.secure: "false"
   # Optional: Enable cassandra internodes and client encryption
   cassandra.ssl.enabled: "false"
@@ -28,14 +28,14 @@ data:
   cassandra.password: ""
   # Required: CQL native clients port
   cassandra.port: "9042"
-  # Optional: Cassandra replication factor to use. This parameter will just be applied during the
-  # keyspace creation, no changes are done to an already existing keyspace
+  # Optional: Cassandra replication factor to use. This parameter will be applied during the
+  # initial keyspace creation. This will not change an already running install
   cassandra.replication.factor: "1"
-  # Optional: Cassandra JVM options, when Cassandra is started as a Kubernetes service using
-  # the provided manifests. For heavy load environments you'll need to tweak the memory or garbage
-  # collection settings
+  # Optional: Cassandra JVM JVM options. For heavy load environments this will override the defaults
   cassandra.jvm.options: ""
-  # Required: Redis endpoint DNS/IP. If Redis is deployed as a Kubernetes service, 
+  # Optional: Store Sysdig captures using Cassandra instead of S3. This increases cassandra storage if set to true
+  sysdigcloud.captures.cassandra.storage: "true"
+  # Required: Redis endpoint DNS/IP. If Redis is deployed as a Kubernetes service,
   # this will be the service name. If using an external database, put the proper address
   redis.endpoint: sysdigcloud-redis
   # Optional: Redis password
@@ -43,9 +43,7 @@ data:
   # Required: Elasticsearch URL. If Elasticsearch is deployed as a Kubernetes service,
   # this will be the service name. If using an external database, put the proper address
   elasticsearch.url: http://sysdigcloud-elasticsearch
-  # Optional: Elasticsearch JVM options, when Elasticsearch is started as a Kubernetes service using
-  # the provided manifests. For heavy load environments you'll need to tweak the memory or garbage
-  # collection settings
+  # Optional: Elasticsearch JVM options. For heavy load environments this will override the defaults
   elasticsearch.jvm.options: ""
   # Optional: SMTP server address, needed for Sysdig Cloud to send email notifications
   smtp.server: ""
@@ -62,30 +60,31 @@ data:
   smtp.from.address: ""
   # Required: Collector service endpoint DNS/IP. If the collector needs to be reachable outside the Kubernetes
   # cluster, this will likely need to be set to the address of the Kubernetes nodes (if using a NodePort service) or the
-  # cloud load balancer created by the service (if using a LoadBalancer service). Otherwise, it can be left
+  # cloud loadbalancer created by the service (if using a LoadBalancer service). Otherwise, it can be left
   # to the default value and the collector will just be routable within the Kubernetes cluster.
   collector.endpoint: sysdigcloud-collector
   # Required: Collector port. If using a LoadBalancer service for the collector, the port can be left as the default.
   # If using a NodePort service, this will need to be set to the dynamic port allocated by Kubernetes on the nodes
   # (obtained via kubectl describe service sysdigcloud-collector)
   collector.port: "6443"
-  # Required: Api service https URL. If the api needs to be reachable outside the Kubernetes
-  # cluster, this will likely need to be set to the address of the Kubernetes nodes and the dynamic port allocated
-  # by Kubernetes (if using a NodePort service) or the cloud load balancer created by the service (if using a LoadBalancer service). 
+  # Required: Api service https URL. If the api needs to be reachable outside the Kubernetes cluster,
+  # this will likely need to be set to the address of the Kubernetes nodes and the dynamic port allocated by Kubernetes
+  # (if using a NodePort service) or the cloud loadbalancer created by the service (if using a LoadBalancer service).
   # Otherwise, it can be left to the default value and the api will just be routable within the Kubernetes cluster.
   api.url: https://sysdigcloud-api:443
-  # Required: Sysdig Cloud default user. This will be used for the initial login in the web interface
+  # Required: Sysdig Cloud super admin user. This will be used for the initial login in the web interface
   sysdigcloud.default.user: test@sysdig.com
-  # Required: Sysdig Cloud default user password
+  # Required: Sysdig Cloud super admin user password
   sysdigcloud.default.user.password: test
-  # Required: Restrict password login to default user
+  # Required: Restrict password login to super admin user
   # Force all non-default users to login using the configured IdP
   sysdigcloud.restrict.password.login: "false"
   # Optional: forward application logs to stdout
   sysdigcloud.logging.stdout: "false"
-  # Optional: Sysdig Cloud application JVM options. For heavy load environments you'll need to tweak 
-  # the memory or garbage collection settings
-  sysdigcloud.jvm.options: ""
+  # Optional: Sysdig Cloud application JVM options. For heavy load environments this will override the defaults
+  sysdigcloud.jvm.api.options: ""
+  sysdigcloud.jvm.worker.options: ""
+  sysdigcloud.jvm.collector.options: ""
   # Required: Sysdig Cloud license
   sysdigcloud.license: ""
   # Optional: OAuth allowed domains (comma separated list of domains)
@@ -96,7 +95,7 @@ data:
   sysdigcloud.google.oauth.client.secret: ""
   # Required: enable or disable Sysdig Cloud LDAP integration
   sysdigcloud.ldap.enabled: "false"
-  # ==== BEGIN DEPRECATED LDAP OPTIONS ====
+  # ======= BEGIN DEPRECATED LDAP OPTIONS =======
   # NOTE: The following series of optional LDAP settings are deprecated starting
   # with version 890. If you have been using LDAP in a version older than 890,
   # you should keep your settings intact until you successfully upgrade to 890
@@ -135,7 +134,4 @@ data:
   # The group membership filter field controls the search filter that is used to determine group membership.
   # You are normally safe leaving this field unchanged, the default value ( | (member={0}) (uniqueMember={0}) (memberUid={1})) will be used.
   sysdigcloud.ldap.group.membership.filter: ""
-  # Optional: Store Sysdig captures using Cassandra instead of S3
-  # NB. This affects cassandra storage
-  # ==== END DEPRECATED LDAP OPTIONS ====
-  sysdigcloud.captures.cassandra.storage: "true"
+  # ======= END DEPRECATED LDAP OPTIONS =======

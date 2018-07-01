@@ -1,3 +1,4 @@
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -12,7 +13,11 @@ spec:
     spec:
       containers:
         - name: collector
+<<<<<<< HEAD
           image: quay.io/sysdig/sysdigcloud-backend:914
+=======
+          image: quay.io/sysdig/sysdigcloud-backend:963
+>>>>>>> upstream/master
           volumeMounts:
             - name: logs
               mountPath: /var/log/sysdigcloud
@@ -45,7 +50,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: sysdigcloud-config
-                  key: sysdigcloud.jvm.options
+                  key: sysdigcloud.jvm.collector.options
           # If you're running multiple replicas, it is advisable to configure the limits below. Limiting resources 
           # can help stabilize rolling updates later down the road.
           # resources:

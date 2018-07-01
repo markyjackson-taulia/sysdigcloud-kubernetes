@@ -1,9 +1,18 @@
+<<<<<<< HEAD
+=======
+---
+>>>>>>> upstream/master
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
   name: sysdigcloud-elasticsearch
+<<<<<<< HEAD
   namespace: sysdigcloud
   labels:
+=======
+  labels:
+    app: sysdigcloud
+>>>>>>> upstream/master
     component: elasticsearch
     role: elasticsearch
 spec:
@@ -12,6 +21,10 @@ spec:
   template:
     metadata:
       labels:
+<<<<<<< HEAD
+=======
+        app: sysdigcloud
+>>>>>>> upstream/master
         component: elasticsearch
         role: elasticsearch
     spec:
@@ -45,4 +58,8 @@ spec:
                   resources:
                     requests:
                       storage: 50Gi
+<<<<<<< HEAD
                   storageClassName: standard
+=======
+                  storageClassName: <INSERT_YOUR_STORAGE_CLASS_NAME>
+>>>>>>> upstream/master

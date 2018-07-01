@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+---
+>>>>>>> upstream/master
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
@@ -62,4 +66,8 @@ spec:
             resources:
               requests:
                 storage: 50Gi
+<<<<<<< HEAD
             storageClassName: standard
+=======
+            storageClassName: <INSERT_YOUR_STORAGE_CLASS_NAME>
+>>>>>>> upstream/master
