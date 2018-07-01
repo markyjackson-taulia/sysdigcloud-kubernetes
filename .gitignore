@@ -6,6 +6,9 @@
 
 server.crt
 server.key
+<<<<<<< HEAD
 
 .idea
 
+=======
+>>>>>>> 127db37142a84795d7265eea13e171a7b9f1619b
