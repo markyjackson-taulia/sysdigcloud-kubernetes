@@ -4,7 +4,7 @@ kind: StatefulSet
 metadata:
   name: redis-secondary
 spec:
-  serviceName: sysdigcloud-redis
+  serviceName: redis-secondary
   replicas: 2
   template:
     metadata:
