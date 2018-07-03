@@ -13,15 +13,7 @@ spec:
     spec:
       containers:
         - name: collector
-<<<<<<< HEAD
-<<<<<<< HEAD
-          image: quay.io/sysdig/sysdigcloud-backend:914
-=======
           image: quay.io/sysdig/sysdigcloud-backend:963
->>>>>>> upstream/master
-=======
-          image: quay.io/sysdig/sysdigcloud-backend:925
->>>>>>> 127db37142a84795d7265eea13e171a7b9f1619b
           volumeMounts:
             - name: logs
               mountPath: /var/log/sysdigcloud
