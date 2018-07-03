@@ -37,8 +37,7 @@ data:
   sysdigcloud.captures.cassandra.storage: "true"
   # Required: Redis endpoint DNS/IP. If Redis is deployed as a Kubernetes service,
   # this will be the service name. If using an external database, put the proper address
-  redis.endpoint: redis-primary
-  redis.endpoint: redis-secondary
+  redis.endpoint: sysdigcloud-redis
   # Optional: Redis password
   redis.password: ""
   # Required: Elasticsearch URL. If Elasticsearch is deployed as a Kubernetes service,
