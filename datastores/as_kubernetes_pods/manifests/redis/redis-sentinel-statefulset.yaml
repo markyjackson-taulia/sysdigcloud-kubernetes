@@ -19,7 +19,6 @@ spec:
         env:
         - name: SENTINEL
           value: redis-primary
-          value: redis-secondary
         ports:
         - containerPort: 26379
           name: redis-sentinel
