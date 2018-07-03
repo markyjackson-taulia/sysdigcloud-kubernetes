@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis-secondary
+  name: sysdigcloud-redis
   labels:
-    app: redis-secondary
+    app: sysdigcloud
+    role: redis
 spec:
   ports:
   - port: 6379
-    name: redis-secondary
   selector:
-    app: redis-secondary
+    app: sysdigcloud
