@@ -15,6 +15,12 @@ spec:
       containers:
       - name: redis-secondary
         image: corybuecker/redis:3.2
+        env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: sysdigcloud-config
+                key: redis.password
         imagePullPolicy: Always
         env:
         - name: REPLICA
