@@ -4,8 +4,8 @@ kind: StatefulSet
 metadata:
   name: redis-primary
 spec:
-  serviceName: redis-primary
-  replicas: 1
+  serviceName: sysdigcloud-redis
+  replicas: 3
   template:
     metadata:
       labels:
