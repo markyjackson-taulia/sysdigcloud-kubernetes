@@ -14,7 +14,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: redis-primary
-        image: corybuecker/redis:3.2
+        image: quay.io/sysdig/redis:3.2-v4
         env:
           - name: REDIS_PASSWORD
             valueFrom:
