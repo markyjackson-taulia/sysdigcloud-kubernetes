@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: sysdigcloud-redis
+  name: redis-primary
   labels:
-    app: sysdigcloud-redis
+    app: redis-primary
 spec:
   ports:
   - port: 6379
-    name: sysdigcloud-redis
+    name: redis-primary
   selector:
-    app: sysdigcloud-redis
+    app: redis-primary
