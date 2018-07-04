@@ -2,19 +2,26 @@
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: redis-primary
+  name: sysdigcloud-redis
 spec:
   serviceName: sysdigcloud-redis
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
-        app: redis-primary
+        app: sysdigcloud
+        role: redis
     spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: redis-primary
-        image: jequals5/redis:3.2-v4
+        image: jequals5/redis:testing
+        env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: sysdigcloud-config
+                key: redis.password
         imagePullPolicy: Always
         ports:
         - containerPort: 6379
