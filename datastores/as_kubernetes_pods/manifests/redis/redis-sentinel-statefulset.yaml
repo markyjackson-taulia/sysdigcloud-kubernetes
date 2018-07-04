@@ -18,7 +18,7 @@ spec:
         imagePullPolicy: Always
         env:
         - name: SENTINEL
-          value: sysdigcloud-redis
+          value: redis-primary
         ports:
         - containerPort: 26379
           name: redis-sentinel
