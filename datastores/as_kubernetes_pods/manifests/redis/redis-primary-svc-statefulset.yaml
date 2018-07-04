@@ -4,10 +4,10 @@ kind: Service
 metadata:
   name: sysdigcloud-redis
   labels:
-    app: redis-primary
+    app: sysdigcloud-redis
 spec:
   ports:
   - port: 6379
-    name: redis-primary
+    name: sysdigcloud-redis
   selector:
-    app: redis-primary
+    app: sysdigcloud-redis

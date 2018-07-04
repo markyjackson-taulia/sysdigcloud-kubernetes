@@ -9,16 +9,16 @@ spec:
   template:
     metadata:
       labels:
-        app: redis-primary
+        app: sysdigcloud-redis
     spec:
       terminationGracePeriodSeconds: 10
       containers:
-      - name: redis-primary
+      - name: sysdigcloud-redis
         image: jequals5/redis:3.2-v4
         imagePullPolicy: Always
         ports:
         - containerPort: 6379
-          name: redis-primary
+          name: sysdigcloud-redis
         volumeMounts:
         - name: redis-primary-volume
           mountPath: /data
