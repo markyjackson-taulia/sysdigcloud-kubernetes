@@ -14,7 +14,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: redis-secondary
-        image: quay.io/sysdig/redis:testing
+        image: quay.io/sysdig/redis:3.2-v6
         imagePullPolicy: Always
         env:
         - name: REPLICA
