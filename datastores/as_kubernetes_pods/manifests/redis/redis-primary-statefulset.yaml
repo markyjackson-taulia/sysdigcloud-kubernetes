@@ -14,7 +14,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: redis-primary
-        image: jequals5/redis:testing
+        image: quay.io/sysdig/redis:3.2-v5
         env:
           - name: REDIS_PASSWORD
             valueFrom:
@@ -28,6 +28,8 @@ spec:
         volumeMounts:
         - name: redis-primary-volume
           mountPath: /data
+      imagePullSecrets:
+        - name: sysdigcloud-pull-secret
   volumeClaimTemplates:
   - metadata:
       name: redis-primary-volume
@@ -36,4 +38,3 @@ spec:
       resources:
         requests:
           storage: 1Gi
-
