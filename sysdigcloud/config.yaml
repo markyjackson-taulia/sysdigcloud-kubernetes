@@ -40,7 +40,7 @@ data:
   # The assumption is that the redis port will always be 6339
   redis.endpoint: redis-primary
   # Optional: Redis password
-  redis.password: "Ilovemark"
+  redis.password: "Ireallylovemark"
   # Required: Elasticsearch URL. If Elasticsearch is deployed as a Kubernetes service,
   # this will be the service name. If using an external database, put the proper address
   elasticsearch.url: http://sysdigcloud-elasticsearch
