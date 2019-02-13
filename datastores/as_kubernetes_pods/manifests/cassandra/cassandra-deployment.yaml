@@ -13,7 +13,7 @@ spec:
         role: cassandra
     spec:
       containers:
-        - image: quay.io/sysdig/cassandra:2.1.15.0
+        - image: quay.io/sysdig/cassandra:2.1.20.5
           name: cassandra
           env:
             - name: CASSANDRA_SERVICE

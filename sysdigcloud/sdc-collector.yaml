@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: collector
-          image: quay.io/sysdig/sysdigcloud-backend:987
+          image: quay.io/sysdig/sysdigcloud-backend:1630
           volumeMounts:
             - name: logs
               mountPath: /var/log/sysdigcloud
@@ -47,7 +47,12 @@ spec:
                 configMapKeyRef:
                   name: sysdigcloud-config
                   key: sysdigcloud.jvm.collector.options
-          # If you're running multiple replicas, it is advisable to configure the limits below. Limiting resources 
+            - name: JAVA_GC_PARAMETERS
+              valueFrom:
+                configMapKeyRef:
+                  name: sysdigcloud-config
+                  key: sysdigcloud.jvmgc.collector.options
+          # If you're running multiple replicas, it is advisable to configure the limits below. Limiting resources
           # can help stabilize rolling updates later down the road.
           # resources:
           #   # minimum resources for container

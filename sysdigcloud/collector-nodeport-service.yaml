@@ -8,6 +8,7 @@ metadata:
     role: collector
 spec:
   type: NodePort
+  sessionAffinity: ClientIP
   ports:
     - port: 6443
       name: secure-collector

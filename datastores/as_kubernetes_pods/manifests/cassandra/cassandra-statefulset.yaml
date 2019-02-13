@@ -1,4 +1,4 @@
-
+---
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
@@ -16,8 +16,22 @@ spec:
         app: sysdigcloud
         role: cassandra
     spec:
+      #affinity:
+        #podAntiAffinity:
+          #requiredDuringSchedulingIgnoredDuringExecution:
+          #- labelSelector:
+              #matchExpressions:
+              #- key: app
+                #operator: In
+                #values:
+                #- sysdigcloud
+              #- key: role
+                #operator: In
+                #values:
+                #- cassandra
+            #topologyKey: "kubernetes.io/hostname"
       containers:
-        - image: quay.io/sysdig/cassandra:2.1.15.1
+        - image: quay.io/sysdig/cassandra:2.1.20.5
           name: cassandra
           env:
             - name: CASSANDRA_SERVICE
@@ -47,6 +61,19 @@ spec:
                 configMapKeyRef:
                   name: sysdigcloud-config
                   key: cassandra.ssl.enabled
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - 'if [[ $(nodetool status | grep ${POD_IP}) == *"UN"* ]]; then exit 0; else exit 1; fi'
+            initialDelaySeconds: 15
+            failureThreshold: 10
+            timeoutSeconds: 5
           volumeMounts:
             - mountPath: /var/lib/cassandra
               name: data
@@ -56,10 +83,11 @@ spec:
       imagePullSecrets:
         - name: sysdigcloud-pull-secret
   volumeClaimTemplates:
-        - metadata:
-            name: data
-          spec:
-            accessModes: ["ReadWriteOnce"]
-            resources:
-              requests:
-                storage: 50Gi
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+      storageClassName: <INSERT_YOUR_STORAGE_CLASS_NAME>

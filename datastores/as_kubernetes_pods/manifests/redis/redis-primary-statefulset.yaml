@@ -11,10 +11,25 @@ spec:
       labels:
         app: redis-primary
     spec:
+      #affinity:
+        #podAntiAffinity:
+          #requiredDuringSchedulingIgnoredDuringExecution:
+          #- labelSelector:
+              #matchExpressions:
+              #- key: app
+                #operator: In
+                #values:
+                #- redis-primary
+                #- redis-secondary
+            #topologyKey: "kubernetes.io/hostname"
       terminationGracePeriodSeconds: 10
       containers:
       - name: redis-primary
-        image: quay.io/sysdig/redis:3.2-v6
+        image: quay.io/sysdig/redis:3.2.12.5-alpine-ha
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1Gi
         env:
           - name: REDIS_PASSWORD
             valueFrom:
@@ -30,11 +45,6 @@ spec:
           mountPath: /data
       imagePullSecrets:
         - name: sysdigcloud-pull-secret
-  volumeClaimTemplates:
-  - metadata:
-      name: redis-primary-volume
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
+      volumes:
+        - name: redis-primary-volume
+          emptyDir: {}

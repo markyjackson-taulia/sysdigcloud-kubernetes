@@ -13,7 +13,7 @@ spec:
         role: elasticsearch
     spec:
       containers:
-        - image: quay.io/sysdig/elasticsearch:5.1.1.0
+        - image: quay.io/sysdig/elasticsearch:5.6.13.2
           name: elasticsearch
           # https://www.elastic.co/blog/bootstrap_checks_annoying_instead_of_devastating
           # Elasticsearch team decided to force everybody to run ES5 with the following sysctl option:

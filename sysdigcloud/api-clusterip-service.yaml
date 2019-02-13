@@ -7,11 +7,10 @@ metadata:
     app: sysdigcloud
     role: api
 spec:
-  type: NodePort
-  sessionAffinity: ClientIP
+  type: ClusterIP
   ports:
-    - port: 443
-      name: secure-api
+    - port: 8080
+      name: internal-api
   selector:
     app: sysdigcloud
     role: api

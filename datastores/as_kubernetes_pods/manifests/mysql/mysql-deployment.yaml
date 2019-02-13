@@ -1,5 +1,17 @@
 ---
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sysdig-mysql-disk
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: <INSERT_YOUR_STORAGE_CLASS_NAME>
+  resources:
+    requests:
+      storage: 15Gi
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: sysdigcloud-mysql-config
@@ -70,7 +82,11 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: mysql:5.6.34
+          image: quay.io/sysdig/mysql:5.6.42.3
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
@@ -89,26 +105,35 @@ spec:
                   key: mysql.password
             - name: MYSQL_DATABASE
               value: draios
+            # These MYSQL_EXTRADB_* enviroment variables will trigger the
+            # creation of the scanning database when mysql starts.
+            # - name: MYSQL_EXTRADB_SCANNING_DBNAME
+            #   valueFrom:
+            #     configMapKeyRef:
+            #       name: sysdigcloud-config
+            #       key: scanning.mysql.dbname
+            # - name: MYSQL_EXTRADB_SCANNING_USER
+            #   valueFrom:
+            #     configMapKeyRef:
+            #       name: sysdigcloud-config
+            #       key: scanning.mysql.user
+            # - name: MYSQL_EXTRADB_SCANNING_PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: sysdigcloud-scanning
+            #       key: scanning.mysql.password
           volumeMounts:
             - name: mysql-config
               mountPath: /etc/mysql/my.cnf
               subPath: my.cnf
             - name: data
               mountPath: /var/lib/mysql
+      imagePullSecrets:
+        - name: sysdigcloud-pull-secret
       volumes:
         - name: mysql-config
           configMap:
             name: sysdigcloud-mysql-config
-        # Uncomment this for emptyDir volumes
         - name: data
-          emptyDir: {}
-        # Uncomment this for GCE Disk
-        # - name: data
-        #   gcePersistentDisk:
-        #     pdName: <volume-name>
-        #     fsType: ext4
-        # Uncomment this for AWS EBS
-        # - name: data
-        #   awsElasticBlockStore:
-        #     volumeID: <volume-id>
-        #     fsType: ext4
+          persistentVolumeClaim:
+            claimName: sysdig-mysql-disk
