@@ -38,23 +38,23 @@ spec:
         app: sysdigcloud
         role: mysql-cluster
     spec:
-      #affinity:
-        #podAntiAffinity:
-          #requiredDuringSchedulingIgnoredDuringExecution:
-          #- labelSelector:
-              #matchExpressions:
-              #- key: app
-                #operator: In
-                #values:
-                #- sysdigcloud
-              #- key: role
-                #operator: In
-                #values:
-                #- mysql-cluster
-            #topologyKey: "kubernetes.io/hostname"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - sysdigcloud
+              - key: role
+                operator: In
+                values:
+                - mysql-cluster
+            topologyKey: "kubernetes.io/hostname"
       containers:
         - name: mysql
-          image: quay.io/sysdig/mysql-server:8.0.13.2
+          image: quay.io/sysdig/mysql-server:8.0.13.7
           command:
             - /bin/bash
             - -ecx
@@ -63,7 +63,7 @@ spec:
               sed -i -e '/^\s*default-authentication-plugin=/d;$a\\n# Use native auth plugin for compatibility with MariaDB driver\ndefault-authentication-plugin=mysql_native_password'  /etc/my.cnf
 
               base=1000
-              index=$(cat /etc/hostname | grep -o '[^-]*$')
+              index=$(echo $HOSTNAME | grep -o '[^-]*$')
 
               /entrypoint.sh --server_id=$(expr $base + $index) \
               --datadir=/var/lib/mysql \
@@ -82,10 +82,6 @@ spec:
               --log-error-verbosity=3 \
               --max_connections=1024 \
               --explicit_defaults_for_timestamp=ON
-          resources:
-            requests:
-              cpu: 500m
-              memory: 1Gi
           env:
             - name: MYSQL_DATABASE
               value: draios
@@ -125,12 +121,19 @@ spec:
               value: '%'
             - name: MYSQL_LOG_CONSOLE
               value: "true"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 1
+              memory: 2Gi
           volumeMounts:
             - mountPath: /var/lib/mysql
               name: data
               subPath: "mysql"
         - name: mysql-agent
-          image: quay.io/sysdig/mysql-agent:0.1.1.1
+          image: quay.io/sysdig/mysql-agent:0.1.1.4
           args:
             - --v=4
             - --no-kube-client

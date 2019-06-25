@@ -27,7 +27,7 @@ spec:
         - name: sysdigcloud-pull-secret
       containers:
         - name: scanning-alertmgr
-          image: quay.io/sysdig/scanning:1630
+          image: quay.io/sysdig/scanning:2304
           imagePullPolicy: IfNotPresent
           resources:
             {}
@@ -119,3 +119,10 @@ spec:
               configMapKeyRef:
                 name: sysdigcloud-config
                 key: redis.password
+          - name: BASE_API_URL
+            valueFrom:
+              configMapKeyRef:
+                name: sysdigcloud-config
+                key: api.url
+          - name: UI_SECURE_URL
+            value: "$(BASE_API_URL)/secure"

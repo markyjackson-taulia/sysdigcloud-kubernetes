@@ -16,19 +16,16 @@ data:
     internal_ssl_verify: false
     metrics:
       enabled: false
+    default_admin_password: ${ANCHORE_ADMIN_PASSWORD}
+    default_admin_email: 'admin@myemail.com'
     credentials:
-      users:
-         admin:
-           password: ${ANCHORE_ADMIN_PASSWORD}
-           email: 'admin@myemail.com'
-           external_service_auths:
       database:
         db_connect: "postgresql+pg8000://${ANCHORE_DB_USER}:${ANCHORE_DB_PASSWORD}@${ANCHORE_DB_ENDPOINT}/${ANCHORE_DB}"
         db_connect_args:
           timeout: 120
           ssl: false
-        db_pool_size: 30
-        db_pool_max_overflow: 30
+        db_pool_size: 50
+        db_pool_max_overflow: 70
     services:
       analyzer:
         enabled: true

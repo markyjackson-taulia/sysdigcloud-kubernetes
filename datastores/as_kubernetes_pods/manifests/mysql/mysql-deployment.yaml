@@ -5,7 +5,7 @@ metadata:
   name: sysdig-mysql-disk
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: <INSERT_YOUR_STORAGE_CLASS_NAME>
   resources:
     requests:
@@ -82,7 +82,7 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: quay.io/sysdig/mysql:5.6.42.3
+          image: quay.io/sysdig/mysql:5.6.43.5
           resources:
             requests:
               cpu: 500m

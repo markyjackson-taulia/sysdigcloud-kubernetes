@@ -25,9 +25,19 @@ spec:
         - name: config-volume
           configMap:
             name: sysdigcloud-anchore-core
+        # If you need to import self-signed SSL certs (e.g. because there's a proxy
+        # to the standard vulnerabilities feed service, or images are hosted on
+        # internal registries), create a secret named 'sysdigcloud-anchore-custom-certs'
+        # as in
+        #    kubectl ... create secret generic sysdigcloud-anchore-custom-certs
+        #    --from-file=/path/to/custom-cert1 --from_file=/path/to/custom-cert2 ...
+        # then uncomment this:
+        # - name: custom-certs-volume
+        #   secret:
+        #     secretName: sysdigcloud-anchore-custom-certs
       containers:
       - name: anchore-core
-        image: quay.io/sysdig/anchore:v0.2.4
+        image: quay.io/sysdig/anchore:v0.3.4.1
         imagePullPolicy:
         resources:
           {}
@@ -84,16 +94,25 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
-        # See comments in sysdigcloud/config.yaml on how to specify anchore.https.proxy:
+        # See comments in sysdigcloud/config.yaml on how to specify https_proxy and no_proxy:
         # https://github.com/draios/sysdigcloud-kubernetes/blob/master/sysdigcloud/config.yaml
         # - name: https_proxy
         #   valueFrom:
         #     configMapKeyRef:
         #       name: sysdigcloud-config
-        #       key: anchore.https.proxy
+        #       key: anchore.core.https.proxy
+        # - name: no_proxy
+        #   valueFrom:
+        #     configMapKeyRef:
+        #       name: sysdigcloud-config
+        #       key: anchore.no_proxy
         volumeMounts:
         - name: config-volume
           mountPath: /config
+        # Only needed if the engine needs to import self-signed SSL certs
+        # (see comment above)
+        # - name: custom-certs-volume
+        #   mountPath: /custom-certs
         readinessProbe:
           httpGet:
             path: /health
